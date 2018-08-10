@@ -1,0 +1,6 @@
+*.DS_Store*
+*__dev__*
+*build/*
+*dist/*
+*.ipynb_checkpoint*
+*.egg-info*
