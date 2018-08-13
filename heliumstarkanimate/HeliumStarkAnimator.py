@@ -4,8 +4,8 @@ from scipy.special import sph_harm
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import functools
-import seaborn as sns
 import os
+from ipywidgets import interact
 
 class HeliumStarkAnimator(object):
     """
@@ -16,20 +16,19 @@ class HeliumStarkAnimator(object):
         """
         self.hamiltonianMatrix = hamiltonianMatrix
         
-        
-    def charge_distribution(self, state_idx, Efield, Bfield=0.0, **kwargs):
+    def charge_distributions(self, state_idx, Efield, Bfield=0.0, **kwargs):
         """
         """
         eig_val, eig_vec = self.hamiltonianMatrix.stark_map(
             Efield, Bfield=Bfield, eig_vec=True, **kwargs)
         
-        charge_distributions = []
+        charge_dists = []
         for _eig_vec in tqdm(eig_vec, desc='Computing charge distributions'):
-            charge_distributions.append(
-                self.charge_distribution_from_eig_vec(_eig_vec, state_idx))
-        return charge_distributions
+            charge_dists.append(
+                self.charge_distribution(_eig_vec, state_idx))
+        return charge_dists, eig_val
         
-    def charge_distribution_from_eig_vec(self, eig_vec, state_idx, resolution=101, thres=1e-2):
+    def charge_distribution(self, eig_vec, state_idx, resolution=101, thres=1e-2):
         """
         """
         _wf_2d_all = []
@@ -45,12 +44,41 @@ class HeliumStarkAnimator(object):
         _charge_2d = np.sum(_wf_2d_all, axis=0)**2 * _sph_r_2d**2
         return _charge_2d
     
-    def plot(self, _distribution_2d):
+    def plot_interactive(self, Efield, charge_dists, stark_map, state_idx, figsize=(8,4), cmap='RdBu_r'):
+        """
+        """   
+        fig = plt.figure(figsize=figsize)
+        i0 = 0
+        limit = np.max(np.abs(charge_dists[i0]))
+
+        ax1 = fig.add_subplot(1, 2, 1)
+        ax1.set_xlabel('Electric field (V/cm)')
+        ax1.set_ylabel('Energy / h (GHz)')
+        ax1.set_title('Stark map')
+        sm = ax1.plot(Efield, stark_map / (h*10**9), ls='-', lw=1.0, alpha=1, c=(0.2, 0.2, 0.8))
+        mp = ax1.plot(Efield[i0], stark_map[i0, state_idx] / (h*10**9), 'ro')
+
+        ax2 = fig.add_subplot(1, 2, 2)
+        ax2.set_title('Charge distribution')
+        ax2.set_axis_off()
+        hp = ax2.imshow(np.abs(charge_dists[i0]), cmap=cmap, vmin=-limit, vmax=+limit)
+
+        @interact(i=(0, len(charge_dists)-1, 1))
+        def interaction_plots(i=0):
+            hp.set_data(np.abs(charge_dists[i]))
+            limit = np.max(np.abs(charge_dists[i]))
+            hp.vmin = -limit
+            hp.vmax = +limit
+            mp[0].set_data(Efield[i], stark_map[i, state_idx] / (h*10**9))
+            fig.canvas.draw()
+    
+    def plot(self, distribution, figsize=(3,3), cmap='RdBu_r'):
         """
         """
-        plot = sns.heatmap(np.abs(_distribution_2d), cbar=False, square=True, cmap = "RdBu_r", center=0.0)
-        _=plot.set_xticklabels("")
-        _=plot.set_yticklabels("")
+        fig, ax = plt.subplots(figsize=figsize)
+        limit = np.max(np.abs(distribution))
+        plot = plt.imshow(np.abs(distribution), cmap=cmap, vmin=-limit, vmax=+limit)
+        ax.set_axis_off()
         
     def save(self, distributions, images_dir='images'):
         """

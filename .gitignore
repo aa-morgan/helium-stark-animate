@@ -4,3 +4,4 @@
 *dist/*
 *.ipynb_checkpoint*
 *.egg-info*
+*/images/*

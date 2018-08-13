@@ -46,7 +46,7 @@ Calculate charge distributions of a state for different values of the electric f
 ```python
 state_idx = n_min**2
 Efield = np.linspace(0.0, 6.0*10**5, 11) # V/cm
-charge_dists = animator.charge_distribution(state_idx, Efield*1e2)
+charge_dists = animator.charge_distributions(state_idx, Efield*1e2)
 ```
 
 Plot the charge distribution for one field,
@@ -57,6 +57,11 @@ animator.plot(charge_dists[0])
 Save the charge distributions to a `.jpg` file for each field,
 ```python
 animator.save(charge_dists)
+```
+
+Plot an interactive figure of the charge distribution along with the corresponding Stark map,
+```python
+animator.plot_interactive(Efield, charge_dists, stark_map, state_idx)
 ```
 
 Version information
