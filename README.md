@@ -64,6 +64,8 @@ Plot an interactive figure of the charge distribution along with the correspondi
 animator.plot_interactive(Efield, charge_dists, stark_map, state_idx)
 ```
 
+<img src="images/example.gif" width="550" height="340" />
+
 Version information
 -------------------
 
